@@ -1,0 +1,48 @@
+Ficha Pratica 4 - Exercicio 1
+
+Compilar e executar:
+    javac *.java
+    java doThreadSharing
+
+Output obtido:
+    [Numbered thread 0] Number:1
+    [Numbered thread 1] Number:9
+    [Printer thread] Number:9 (share.name definido por: Numbered thread 0)
+    [Numbered thread 2] Number:9
+    [Printer thread] Number:9 (share.name definido por: Numbered thread 2)
+    [Numbered thread 3] Number:9
+    ...
+    [Numbered thread 9] Number:9
+    [Printer thread] Number:9 (share.name definido por: Numbered thread 9)
+
+Pergunta: as linhas vem numeradas 0,1,2,...,9 ou surgem sobretudo com 9? Porque?
+
+Resposta:
+As linhas NAO vem corretamente numeradas: quase todas mostram o numero 9.
+
+Isto acontece porque todas as threads partilham o MESMO objeto SharedObj
+(so ha um, criado no main e passado a todas). As threads partilham a memoria
+do processo, por isso quando uma altera share.number, as outras veem a alteracao.
+
+Em cada Run2 a ordem e:
+    1. share.setNumber(n)       -> escreve o seu numero no objeto partilhado
+    2. Thread.sleep(n * 1000)   -> dorme n segundos
+    3. share.getNumber()        -> le o numero do objeto partilhado e imprime
+
+As 10 threads arrancam quase ao mesmo tempo, por isso todas fazem o passo 1
+logo no inicio, cada uma por cima do valor da anterior. A ultima a escrever e
+(normalmente) a thread 9, e o objeto fica com o valor 9. Quando cada thread
+acorda e faz o passo 3, ja nao le o seu numero, le o 9 que la ficou.
+A thread 0 (e por vezes a 1) pode mostrar outro valor porque dorme 0 segundos
+e le o numero antes de as outras threads terem acabado de escrever.
+
+A Printer thread tambem mostra sempre 9 pela mesma razao, e o "name" que mostra
+muda porque cada Run2, depois de imprimir, escreve o seu nome no objeto partilhado.
+
+Isto e uma condicao de corrida (race condition): o resultado depende da ordem
+em que as threads acedem a um dado partilhado sem qualquer sincronizacao.
+
+Como ficaria certo: se cada thread voltasse a fazer share.setNumber(n) depois
+do sleep (a linha comentada em Run2) ou simplesmente imprimisse a sua variavel
+n em vez do valor partilhado, cada linha mostraria o numero da propria thread,
+porque as threads acordam em instantes diferentes (0 s, 1 s, 2 s, ...).
